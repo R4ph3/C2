@@ -1,0 +1,53 @@
+import os
+
+HOST = '192.168.0.13'
+PORT = 8080
+
+class FileServer(BaseHTTPRequestHandler):
+    def do_GET(self):
+        try:
+            if self.path == '/':
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                with open('index.html', 'rb') as file:
+                    self.wfile.write(file.read())
+                return
+            else:
+                filename = self.path[1:]
+                if os.path.isfile(filename):
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/octet-stream')
+                    self.end_headers()
+                    with open(filename, 'rb') as file:
+                        self.wfile.write(file.read())
+                else:
+                    self.send_response(404)
+                    self.end_headers()
+                    self.wfile.write(b'File not found.')
+        except Exception as e:
+            print('Error:', e)
+
+    def do_POST(self):
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+
+            filename = self.path[1:]
+            with open(filename, 'wb') as file:
+                file.write(post_data)
+
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'File uploaded successfully.')
+        except Exception as e:
+            print('Error:', e)
+
+def run():
+    server_address = (HOST, PORT)
+    httpd = HTTPServer(server_address, FileServer)
+    print(f'Starting server on {HOST}:{PORT}')
+    httpd.serve_forever()
+
+if __name__ == '__main__':
+    run()
