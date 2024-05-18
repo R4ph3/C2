@@ -1,6 +1,6 @@
 import os
 
-HOST = '192.168.0.13'
+HOST = '192.168.0.100'
 PORT = 8080
 
 class FileServer(BaseHTTPRequestHandler):
