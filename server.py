@@ -130,12 +130,6 @@ exfiltrate: Lanza el modulo de recopilacion de informacion y copia el archivo in
                 #envio de archivo desde el cliente al servidor
                 if command.split(" ")[0] == "get_file":
                     chan.send(command)
-                    archivo = command.split(" ")[1]
-                    filetodown = open(archivo, "wb")
-                    ret_value = chan.recv(40960)
-                    filetodown.write(ret_value)
-                    filetodown.close()
-                    print(ret_value.decode())
                     
                 #envio de archivo desde el servidor al cliente
                 if command.split(" ")[0] == "send_file":
