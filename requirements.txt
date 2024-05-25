@@ -2,3 +2,5 @@ paramiko
 requests
 wmi
 pyinstaller
+fernet
+httpserver
