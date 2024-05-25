@@ -31,7 +31,7 @@ python3 --version
 
 #montamos el python en la ruta del sistema
 python3.11 -m pip install -U pip
-echo '$alias pip3="python3.7 -m pip"' >> ~/.bashrc
+echo '$alias pip3="python3.11 -m pip"' >> ~/.bashrc
 
 #instalar biblios
 
